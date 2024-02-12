@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [uuid_ossp(map: "uuid-ossp")]
+}
+
+model club_position {
+  id                    String                  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt             DateTime                @default(now()) @db.Timestamp(6)
+  updatedAt             DateTime                @default(now()) @updatedAt @db.Timestamp(6)
+  display_name          String
+  value                 String                  @unique @db.VarChar(255)
+  member_club_positions member_club_positions[]
+
+  @@map("club_roles")
+}
+
+model house {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  name      String
+  value     Int      @unique @default(autoincrement())
+  members   member[]
+  memberId  String   @db.Uuid
+
+  @@map("houses")
+}
+
+model member {
+  id                    String                  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt             DateTime                @default(now()) @db.Timestamp(6)
+  updatedAt             DateTime                @default(now()) @updatedAt @db.Timestamp(6)
+  email                 String                  @unique
+  hash                  String
+  name                  String?
+  phone                 String?
+  birthday              DateTime?
+  address               String?
+  university            String?
+  major                 String?
+  houseValue            Int
+  house                 house                   @relation(fields: [houseValue], references: [value])
+  member_type_value     Int
+  member_type           member_type             @relation(fields: [member_type_value], references: [value])
+  hasRole               Boolean                 @default(false)
+  participant_term      Int
+  term                  term                    @relation(fields: [participant_term], references: [id])
+  member_club_positions member_club_positions[]
+
+  @@map("members")
+}
+
+model member_club_positions {
+  id                  String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt           DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt           DateTime      @default(now()) @updatedAt @db.Timestamp(6)
+  termId              Int
+  term                term          @relation(fields: [termId], references: [id])
+  memberId            String        @db.Uuid
+  club_position_value String        @db.VarChar(255)
+  member              member        @relation(fields: [memberId], references: [id])
+  club_position       club_position @relation(fields: [club_position_value], references: [value])
+}
+
+model member_type {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  name      String
+  value     Int      @unique @default(autoincrement())
+  member    member[]
+
+  @@map("member_types")
+}
+
+model role {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  display_name String   @db.VarChar(255)
+
+  @@map("roles")
+}
+
+model term {
+  id                    Int                     @id @default(autoincrement())
+  createdAt             DateTime                @default(now()) @db.Timestamp(6)
+  updatedAt             DateTime                @default(now()) @updatedAt @db.Timestamp(6)
+  startYear             Int
+  new_member            member[]
+  member_club_positions member_club_positions[]
+}

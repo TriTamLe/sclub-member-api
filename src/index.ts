@@ -1,11 +1,17 @@
 import express, {Express, Request, Response} from 'express'
-const app: Express = express();
-const port = 3333;
+import dotenv from "dotenv";
+import {supabase} from "./db";
+dotenv.config();
 
+
+const app: Express = express();
+const port = process.env.PORT || 3000;
 app.get("/", (req: Request, res:Response) => {
-    res.send("Hello World! I am using Typescript!!");
+    res.send("Hello SC-ers!");
 });
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
+app.listen(port, async  () => {
+    console.log("Listening on port " + port)
+    const response = await  supabase.from('User').select("*")
+    console.log(response)
 });
